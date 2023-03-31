@@ -32,14 +32,16 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 //String localPath = Util.download("https://bitcode.in/file1.zip");
 
-                String [] fileUrls = {
+                String[] fileUrls = {
                         "https://bitcode.in/file1",
                         "https://bitcode.in/file2",
                         "https://bitcode.in/file3",
                 };
 
-                new DownloadThread()
-                        .execute(fileUrls);
+                DownloadThread downloadThread =
+                        new DownloadThread(MainActivity.this);
+                downloadThread.setOnProgressListener(new DownloadProgressListener());
+                downloadThread.execute(fileUrls);
             }
         });
 
@@ -69,59 +71,11 @@ public class MainActivity extends AppCompatActivity {
         txtSeekBarValue = findViewById(R.id.txtSeekBarValue);
     }
 
-    class DownloadThread extends AsyncTask<String, Integer, Float> {
-        ProgressDialog progressDialog;
-
+    private class DownloadProgressListener implements DownloadThread.OnProgressListener {
         @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            Log.e("tag", "onPre: " + Thread.currentThread().getName());
-            progressDialog = new ProgressDialog(MainActivity.this);
-            progressDialog.setTitle("BitCode");
-            progressDialog.setMessage("Downloading...");
-            progressDialog.setCancelable(true);
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            //progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.show();
-            btnDownload.setText("Download started");
-        }
-
-        @Override
-        protected Float doInBackground(String [] input) {
-            Log.e("tag", "doInBg: " + Thread.currentThread().getName());
-
-            for(String url : input) {
-                progressDialog.setMessage("Downloading -> " + url);
-                for (int i = 0; i <= 100; i++) {
-                    //Log.e("tag", "Download: " + i  +"%");
-                    //btnDownload.setText(i+"%"); //can't touch views
-                    Integer [] progress = new Integer[1];
-                    progress[0] = i;
-                    publishProgress(progress);
-
-                    progressDialog.setProgress(i);
-                    try {
-                        Thread.sleep(20);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-            return 12.12f;
-        }
-
-        @Override
-        protected void onPostExecute(Float res) {
-            progressDialog.dismiss();
-            Log.e("tag", "onPost: " + Thread.currentThread().getName());
-            btnDownload.setText("Download finished " + res);
-            super.onPostExecute(res);
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            btnDownload.setText(values[0] + "%");
+        public void onProgress(int progress) {
+            btnDownload.setText(progress + "%");
         }
     }
+
 }
